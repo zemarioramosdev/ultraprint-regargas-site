@@ -198,7 +198,7 @@ export default function ProdutosPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => router.push(`/dashboard/produtos/${product.id}/editar`)}>
+                              <DropdownMenuItem onClick={() => router.push(`/dashboard/produtos/editar?id=${product.id}`)}>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>

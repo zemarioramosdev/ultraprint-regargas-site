@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard/header"
 import { ProductForm } from "@/components/products/product-form"
 import { useProdutos, Produto } from "@/hooks/useProdutos"
 import { useAuth } from "@/contexts/AuthContext"
 import { api } from "@/lib/api"
 
-export default function EditarProdutoPage() {
-  const params = useParams()
-  const id = Number(params.id)
+function EditarProdutoContent() {
+  const searchParams = useSearchParams()
+  const id = Number(searchParams.get("id"))
   
   const { update } = useProdutos()
   const { isAuthenticated } = useAuth()
@@ -96,5 +96,17 @@ export default function EditarProdutoPage() {
         )}
       </div>
     </>
+  )
+}
+
+export default function EditarProdutoPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-12">
+        <div className="h-8 w-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    }>
+      <EditarProdutoContent />
+    </Suspense>
   )
 }
