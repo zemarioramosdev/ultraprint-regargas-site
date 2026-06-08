@@ -30,7 +30,7 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.SSH_HOST }} # Pode usar o IP 186.209.113.105
-          username: ${{ secrets.SH_USER }} # Usuário principal do cPanel
+          username: ${{ secrets.FTP_USERNAME }} # Usuário do FTP (ex: deploy@ultraprintrecargas.com.br ou ultraprint)
           password: ${{ secrets.FTP_PASSWORD }} # Crie esta secret com a senha do seu cPanel
           local-dir: ./backend/
           server-dir: ${{ secrets.BACKEND_REMOTE_PATH }}/ # Ex: ultraprint-backend (sem o prefixo /home/usuario)
@@ -73,7 +73,7 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SH_USER }}
+          username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           # OPÇÃO 2: Node.js App - Envia a pasta do frontend compilada
           local-dir: ./frontend/
