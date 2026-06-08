@@ -115,7 +115,7 @@ jobs:
       - name: Restart Node.js Application (Opcional - para OPÇÃO 2)
         run: |
           PORT="${{ secrets.SSH_PORT }}"
-          # O cPanel com Passenger costuma reiniciar a aplicação ao detectar alteração no arquivo tmp/restart.txt
+          # O cPanel com Passenger reinicia a aplicacao ao detectar alteracao no arquivo tmp/restart.txt
           ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }} "
             mkdir -p ${{ secrets.FRONTEND_REMOTE_PATH }}/tmp && \
             touch ${{ secrets.FRONTEND_REMOTE_PATH }}/tmp/restart.txt
