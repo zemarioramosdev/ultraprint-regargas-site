@@ -31,14 +31,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          PORT="${{ secrets.SSH_PORT }}"
-          ssh-keyscan -p ${PORT:-22} -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Deploy Backend Files via Rsync
         run: |
           PORT="${{ secrets.SSH_PORT }}"
           # Sincroniza a pasta do Laravel com o servidor cPanel (excluindo arquivos locais e logs)
-          rsync -avz -e "ssh -p ${PORT:-22}" \
+          rsync -avz -e "ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
             --exclude='.git*' \
             --exclude='.github*' \
             --exclude='node_modules' \
@@ -52,7 +50,7 @@ jobs:
           PORT="${{ secrets.SSH_PORT }}"
           # Executa comandos artisan no servidor para limpar cache e rodar migrações de forma segura
           # Dica: Se o PHP padrão da hospedagem cPanel for antigo, você pode trocar "php" pelo caminho absoluto (ex: "/usr/local/bin/ea-php82")
-          ssh -p ${PORT:-22} ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }} "
+          ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }} "
             cd ${{ secrets.BACKEND_REMOTE_PATH }} && \
             php artisan migrate --force && \
             php artisan config:cache && \
@@ -93,8 +91,6 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          PORT="${{ secrets.SSH_PORT }}"
-          ssh-keyscan -p ${PORT:-22} -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Deploy Frontend Files via Rsync
         run: |
@@ -104,13 +100,13 @@ jobs:
           # OPÇÃO 1: EXPORTAÇÃO ESTÁTICA (Next.js out/)
           # Se você ativou "output: 'export'" no next.config.mjs, descomente a linha abaixo e comente a OPÇÃO 2:
           # ==========================================
-          # rsync -avz -e "ssh -p ${PORT:-22}" frontend/out/ ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.FRONTEND_REMOTE_PATH }}/
+          # rsync -avz -e "ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" frontend/out/ ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.FRONTEND_REMOTE_PATH }}/
           
           # ==========================================
           # OPÇÃO 2: APLICAÇÃO NODE.JS ATIVA (cPanel Node.js App)
           # Padrão: Sincroniza o diretório inteiro compilado e recarrega o app Node no cPanel
           # ==========================================
-          rsync -avz -e "ssh -p ${PORT:-22}" \
+          rsync -avz -e "ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
             --exclude='.git*' \
             --exclude='.github*' \
             --exclude='node_modules' \
@@ -120,7 +116,7 @@ jobs:
         run: |
           PORT="${{ secrets.SSH_PORT }}"
           # O cPanel com Passenger costuma reiniciar a aplicação ao detectar alteração no arquivo tmp/restart.txt
-          ssh -p ${PORT:-22} ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }} "
+          ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }} "
             mkdir -p ${{ secrets.FRONTEND_REMOTE_PATH }}/tmp && \
             touch ${{ secrets.FRONTEND_REMOTE_PATH }}/tmp/restart.txt
           "
