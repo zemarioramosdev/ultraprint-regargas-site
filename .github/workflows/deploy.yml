@@ -40,6 +40,7 @@ jobs:
             **/node_modules/**
             **/tests/**
             **/.env
+            **/vendor/**
 
   deploy-frontend:
     name: Build & Deploy Frontend (Next.js)
