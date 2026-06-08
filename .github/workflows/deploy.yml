@@ -1,4 +1,4 @@
-name: Deploy cPanel - Ultraprint
+name: Deploy cPanel via FTP - Ultraprint
 
 on:
   push:
@@ -26,42 +26,25 @@ jobs:
           cd backend
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-      - name: Configure SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Deploy Backend Files via Rsync
-        run: |
-          PORT="${{ secrets.SSH_PORT }}"
-          # Sincroniza a pasta do Laravel com o servidor cPanel (excluindo arquivos locais e logs)
-          rsync -avz -e "ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
-            --exclude='.git*' \
-            --exclude='.github*' \
-            --exclude='node_modules' \
-            --exclude='tests' \
-            --exclude='storage/logs/*.log' \
-            --exclude='.env' \
-            backend/ ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.BACKEND_REMOTE_PATH }}/
-
-      - name: Execute Remote Laravel Commands
-        run: |
-          PORT="${{ secrets.SSH_PORT }}"
-          # Executa comandos artisan no servidor para limpar cache e rodar migrações de forma segura
-          # Dica: Se o PHP padrão da hospedagem cPanel for antigo, você pode trocar "php" pelo caminho absoluto (ex: "/usr/local/bin/ea-php82")
-          ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }} "
-            cd ${{ secrets.BACKEND_REMOTE_PATH }} && \
-            php artisan migrate --force && \
-            php artisan config:cache && \
-            php artisan route:cache && \
-            php artisan view:cache
-          "
+      - name: Deploy Backend via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.SSH_HOST }} # Pode usar o IP 186.209.113.105
+          username: ${{ secrets.SH_USER }} # Usuário principal do cPanel
+          password: ${{ secrets.FTP_PASSWORD }} # Crie esta secret com a senha do seu cPanel
+          local-dir: ./backend/
+          server-dir: ${{ secrets.BACKEND_REMOTE_PATH }}/ # Ex: ultraprint-backend (sem o prefixo /home/usuario)
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/.env
 
   deploy-frontend:
     name: Build & Deploy Frontend (Next.js)
     runs-on: ubuntu-latest
-    needs: deploy-backend # Garante que o backend seja atualizado antes/concomitantemente
+    needs: deploy-backend
 
     steps:
       - name: Checkout Code
@@ -86,37 +69,21 @@ jobs:
           cd frontend
           npm run build
 
-      - name: Configure SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Deploy Frontend Files via Rsync
-        run: |
-          PORT="${{ secrets.SSH_PORT }}"
-          
-          # ==========================================
-          # OPÇÃO 1: EXPORTAÇÃO ESTÁTICA (Next.js out/)
-          # Se você ativou "output: 'export'" no next.config.mjs, descomente a linha abaixo e comente a OPÇÃO 2:
-          # ==========================================
-          # rsync -avz -e "ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" frontend/out/ ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.FRONTEND_REMOTE_PATH }}/
-          
-          # ==========================================
-          # OPÇÃO 2: APLICAÇÃO NODE.JS ATIVA (cPanel Node.js App)
-          # Padrao: Sincroniza o diretorio inteiro compilado e recarrega o app Node no cPanel
-          # ==========================================
-          rsync -avz -e "ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
-            --exclude='.git*' \
-            --exclude='.github*' \
-            --exclude='node_modules' \
-            frontend/ ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.FRONTEND_REMOTE_PATH }}/
-
-      - name: Restart Node.js Application (Opcional - para OPÇÃO 2)
-        run: |
-          PORT="${{ secrets.SSH_PORT }}"
-          # O cPanel com Passenger reinicia a aplicacao ao detectar alteracao no arquivo tmp/restart.txt
-          ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.SH_USER }}@${{ secrets.SSH_HOST }} "
-            mkdir -p ${{ secrets.FRONTEND_REMOTE_PATH }}/tmp && \
-            touch ${{ secrets.FRONTEND_REMOTE_PATH }}/tmp/restart.txt
-          "
+      - name: Deploy Frontend via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SH_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # OPÇÃO 2: Node.js App - Envia a pasta do frontend compilada
+          local-dir: ./frontend/
+          server-dir: ${{ secrets.FRONTEND_REMOTE_PATH }}/ # Ex: public_html (sem o prefixo /home/usuario)
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.next/**
+            
+          # DICA: Se você usar a OPÇÃO 1 (Next.js estático), altere os campos acima para:
+          # local-dir: ./frontend/out/
+          # E remova o exclude de .next
