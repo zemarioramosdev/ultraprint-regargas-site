@@ -5,6 +5,10 @@ on:
     branches:
       - main # Dispara o deploy automático ao fazer push para a branch main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy-backend:
     name: Build & Deploy Backend (Laravel)
