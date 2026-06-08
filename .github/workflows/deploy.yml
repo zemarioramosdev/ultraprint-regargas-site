@@ -104,7 +104,7 @@ jobs:
           
           # ==========================================
           # OPÇÃO 2: APLICAÇÃO NODE.JS ATIVA (cPanel Node.js App)
-          # Padrão: Sincroniza o diretório inteiro compilado e recarrega o app Node no cPanel
+          # Padrao: Sincroniza o diretorio inteiro compilado e recarrega o app Node no cPanel
           # ==========================================
           rsync -avz -e "ssh -p ${PORT:-22} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
             --exclude='.git*' \
