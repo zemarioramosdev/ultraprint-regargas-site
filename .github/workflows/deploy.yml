@@ -80,15 +80,6 @@ jobs:
           server: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # OPÇÃO 2: Node.js App - Envia a pasta do frontend compilada
-          local-dir: ./frontend/
+          # OPÇÃO 1: Next.js Estático - Envia apenas a pasta out compilada
+          local-dir: ./frontend/out/
           server-dir: ${{ secrets.FRONTEND_REMOTE_PATH }}/ # Ex: public_html (sem o prefixo /home/usuario)
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/.next/**
-            
-          # DICA: Se você usar a OPÇÃO 1 (Next.js estático), altere os campos acima para:
-          # local-dir: ./frontend/out/
-          # E remova o exclude de .next
