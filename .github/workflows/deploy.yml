@@ -97,6 +97,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./backend/
           server-dir: ${{ secrets.BACKEND_REMOTE_PATH }}/
+          state-name: .ftp-backend-sync-state.json
           exclude: |
             **/.git*
             **/.git*/**
@@ -167,6 +168,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./frontend/out/
           server-dir: ${{ secrets.FRONTEND_REMOTE_PATH }}/
+          state-name: .ftp-frontend-sync-state.json
           exclude: |
             **/.git*
             **/.git*/**
