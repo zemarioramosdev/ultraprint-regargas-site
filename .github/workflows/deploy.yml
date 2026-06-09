@@ -10,6 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 1 — Backend (Laravel)
+  # ────────────────────────────────────────────────────────────────────────────
   deploy-backend:
     name: Build & Deploy Backend (Laravel)
     runs-on: ubuntu-latest
@@ -22,7 +25,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, xml, ctype, iconv, pdo-sqlite, pgsql, pdo_pgsql
+          extensions: mbstring, xml, ctype, iconv, pdo_pgsql, pdo_mysql, zip
           coverage: none
 
       - name: Install Composer Dependencies
@@ -30,22 +33,104 @@ jobs:
           cd backend
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
+      # Empacota vendor/ em um único zip para upload rápido por FTP
+      # O FTP-Deploy-Action só faz re-upload se o zip mudar (ex: composer.lock mudou)
+      - name: Package vendor as vendor.zip
+        run: |
+          cd backend
+          zip -r vendor.zip vendor/ -q
+          echo "vendor.zip criado: $(du -sh vendor.zip | cut -f1)"
+
+      # Gera o .env de produção com os valores das secrets do GitHub
+      - name: Create Production .env
+        run: |
+          cd backend
+          cat > .env << 'EOF'
+          APP_NAME="Ultraprint Recargas"
+          APP_ENV=production
+          APP_KEY=${{ secrets.APP_KEY }}
+          APP_DEBUG=false
+          APP_URL=https://api.ultraprintrecargas.com.br
+          FRONTEND_URL=https://ultraprintrecargas.com.br
+
+          LOG_CHANNEL=stack
+          LOG_STACK=single
+          LOG_LEVEL=error
+
+          DB_CONNECTION=${{ secrets.DB_CONNECTION }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+          SESSION_ENCRYPT=false
+          SESSION_PATH=/
+          SESSION_DOMAIN=null
+
+          FILESYSTEM_DISK=local
+          QUEUE_CONNECTION=sync
+          CACHE_STORE=file
+          BROADCAST_CONNECTION=log
+
+          MAIL_MAILER=smtp
+          MAIL_HOST=smtp.gmail.com
+          MAIL_PORT=587
+          MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          MAIL_ENCRYPTION=tls
+          MAIL_FROM_ADDRESS=${{ secrets.MAIL_USERNAME }}
+          MAIL_FROM_NAME="Ultraprint Recargas"
+
+          DEPLOY_TOKEN=${{ secrets.DEPLOY_TOKEN }}
+          EOF
+          # Remove indentação gerada pelo heredoc YAML
+          sed -i 's/^          //' .env
+
       - name: Deploy Backend via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: ${{ secrets.SSH_HOST }} # Pode usar o IP 186.209.113.105
-          username: ${{ secrets.FTP_USERNAME }} # Usuário do FTP (ex: deploy@ultraprintrecargas.com.br ou ultraprint)
-          password: ${{ secrets.FTP_PASSWORD }} # Crie esta secret com a senha do seu cPanel
+          server: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./backend/
-          server-dir: ${{ secrets.BACKEND_REMOTE_PATH }}/ # Ex: ultraprint-backend (sem o prefixo /home/usuario)
+          server-dir: ${{ secrets.BACKEND_REMOTE_PATH }}/
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             **/tests/**
-            **/.env
             **/vendor/**
+            **/storage/logs/**
+            **/storage/framework/cache/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+        env:
+          COMPOSER_PROCESS_TIMEOUT: 0
+          COMPOSER_NO_INTERACTION: 1
 
+      # Aguarda o FTP terminar de propagar e chama o deploy-hook para:
+      # 1) Extrair vendor.zip → vendor/
+      # 2) Rodar php artisan migrate --force
+      # 3) Cachear config e rotas
+      - name: Run Post-Deploy Hook (migrations + cache)
+        run: |
+          echo "Aguardando propagação do FTP..."
+          sleep 20
+          echo "Chamando deploy hook..."
+          HTTP_STATUS=$(curl -s -o /tmp/hook_response.json -w "%{http_code}" \
+            "https://api.ultraprintrecargas.com.br/deploy-hook.php?token=${{ secrets.DEPLOY_TOKEN }}")
+          echo "HTTP Status: $HTTP_STATUS"
+          cat /tmp/hook_response.json
+          if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "207" ]; then
+            echo "::warning::Deploy hook retornou status $HTTP_STATUS. Verifique o servidor manualmente."
+          fi
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 2 — Frontend (Next.js Static Export)
+  # ────────────────────────────────────────────────────────────────────────────
   deploy-frontend:
     name: Build & Deploy Frontend (Next.js)
     runs-on: ubuntu-latest
@@ -67,7 +152,7 @@ jobs:
           cd frontend
           npm install
 
-      - name: Build Next.js Production
+      - name: Build Next.js (Static Export)
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         run: |
@@ -80,6 +165,8 @@ jobs:
           server: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # OPÇÃO 1: Next.js Estático - Envia apenas a pasta out compilada
           local-dir: ./frontend/out/
-          server-dir: ${{ secrets.FRONTEND_REMOTE_PATH }}/ # Ex: public_html (sem o prefixo /home/usuario)
+          server-dir: ${{ secrets.FRONTEND_REMOTE_PATH }}/
+          exclude: |
+            **/.git*
+            **/.git*/**

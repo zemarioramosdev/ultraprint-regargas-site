@@ -19,7 +19,14 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        env('FRONTEND_URL', 'http://localhost:3000'),
+        'https://ultraprintrecargas.com.br',
+        'https://www.ultraprintrecargas.com.br',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3003',
+    ],
 
     'allowed_origins_patterns' => [],
 
