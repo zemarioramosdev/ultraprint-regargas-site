@@ -1,10 +1,23 @@
+# ── Ultraprint Recargas — Next.js Static Export (.htaccess) ──────────────────
+# Necessário para que as rotas como /login, /dashboard, etc. funcionem corretamente
+# no Apache/LiteSpeed com Next.js trailingSlash: true
+
+# Desabilita listagem de diretórios
+Options -Indexes
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  
-  # Redireciona tudo que não for um arquivo físico ou pasta para o index.html (Next.js Routing)
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+
+  # 1. Serve arquivos físicos diretamente (.js, .css, .png, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  # 2. Serve diretórios com index.html diretamente (login/, dashboard/, etc.)
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_FILENAME}/index.html -f
+  RewriteRule ^(.*)/?$ $1/index.html [L]
+
+  # 3. Fallback: rota não encontrada → página inicial (404 visual do Next.js)
+  RewriteRule ^ /index.html [L]
 </IfModule>
