@@ -24,14 +24,14 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.3'
           extensions: mbstring, xml, ctype, iconv, pdo_pgsql, pdo_mysql, zip
           coverage: none
 
       - name: Install Composer Dependencies
         run: |
           cd backend
-          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
 
       # Empacota vendor/ em um único zip para upload rápido por FTP
       # O FTP-Deploy-Action só faz re-upload se o zip mudar (ex: composer.lock mudou)
