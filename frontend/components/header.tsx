@@ -44,11 +44,11 @@ export function Header() {
       {/* Main nav */}
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-20 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <img 
               src="/logo-ultraprint.png" 
               alt="Ultraprint Recargas" 
-              className="h-14 md:h-16 w-auto object-contain" 
+              className="h-14 md:h-16 w-auto max-w-[65vw] sm:max-w-none object-contain" 
             />
           </Link>
 
