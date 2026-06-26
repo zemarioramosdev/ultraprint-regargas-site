@@ -63,8 +63,8 @@ No tinker, execute:
 ```php
 $user = new App\Models\User();
 $user->name = 'Admin';
-$user->email = 'admin@ultraprint.com';
-$user->password = bcrypt('senha123');
+$user->email = 'seu_email@exemplo.com';
+$user->password = bcrypt('sua_senha_segura');
 $user->save();
 exit
 ```
@@ -72,9 +72,9 @@ exit
 #### Fazer login:
 
 1. Acesse: `http://localhost:3000/login`
-2. Use as credenciais:
-   - Email: `admin@ultraprint.com`
-   - Senha: `senha123`
+2. Use as credenciais que você acabou de criar:
+   - Email: `seu_email@exemplo.com`
+   - Senha: `sua_senha_segura`
 
 ## 📡 Endpoints da API
 

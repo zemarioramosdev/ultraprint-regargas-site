@@ -61,7 +61,7 @@ composer install
 # DB_PORT=5433
 # DB_DATABASE=ultraprintrecargas
 # DB_USERNAME=postgres
-# DB_PASSWORD=1234567
+# DB_PASSWORD=sua_senha_aqui
 
 # Executar migrations e seeders (já feito)
 php artisan migrate:fresh --seed
@@ -97,10 +97,10 @@ O frontend estará em: **http://localhost:3000**
 
 ## 🔐 Credenciais de Teste
 
-Um usuário admin foi criado automaticamente:
+Para acessar o sistema, crie um usuário ou utilize suas credenciais configuradas:
 
-- **Email:** admin@ultraprint.com
-- **Senha:** senha123
+- **Email:** seu_email@exemplo.com
+- **Senha:** sua_senha_segura
 
 ## 📡 API Endpoints
 
@@ -124,7 +124,7 @@ curl http://localhost:8000/api/health
 # Login
 curl -X POST http://localhost:8000/api/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@ultraprint.com","password":"senha123"}'
+  -d '{"email":"seu_email@exemplo.com","password":"sua_senha_segura"}'
 ```
 
 ### 2. Testar via Frontend

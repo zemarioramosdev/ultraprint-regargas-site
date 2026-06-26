@@ -1,5 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Droplets, CircleDot, Printer, Recycle, Package, Wrench } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 const services = [
   {
@@ -22,9 +23,13 @@ const services = [
   },
   {
     icon: Printer,
-    title: "Venda de Impressoras",
-    description: "Impressoras novas e seminovas das melhores marcas. Jato de tinta e laser.",
+    title: "Locação de Impressoras",
+    description: "Soluções de locação sob medida para sua empresa. Reduza custos e aumente a produtividade.",
     brands: ["HP", "Epson", "Brother"],
+    action: {
+      label: "Solicitar Cotação",
+      url: "https://wa.me/5531971447807?text=Olá, gostaria de solicitar uma cotação para locação de impressoras."
+    }
   },
   {
     icon: Wrench,
@@ -57,8 +62,8 @@ export function Services() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service, index) => (
-            <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/20">
-              <CardHeader>
+            <Card key={index} className="group flex flex-col h-full hover:shadow-lg transition-all duration-300 border-border hover:border-primary/20">
+              <CardHeader className="flex-grow">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                   <service.icon className="h-6 w-6 text-primary" />
                 </div>
@@ -77,6 +82,15 @@ export function Services() {
                   ))}
                 </div>
               </CardContent>
+              {service.action && (
+                <CardFooter>
+                  <Button asChild className="w-full mt-2" variant="default">
+                    <a href={service.action.url} target="_blank" rel="noopener noreferrer">
+                      {service.action.label}
+                    </a>
+                  </Button>
+                </CardFooter>
+              )}
             </Card>
           ))}
         </div>
